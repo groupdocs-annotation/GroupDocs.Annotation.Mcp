@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>GroupDocs.Annotation.Mcp</PackageId>
+    <Version>$(GroupDocsAnnotationMcp)</Version>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>MCP server exposing GroupDocs.Annotation for .NET — add, list, update, remove, import, export, and render-preview annotations on PDF, Office, and image documents via AI agents.</Description>
+    <PackageTags>groupdocs;annotation;mcp;model-context-protocol;mcp-server;dotnet-tool;ai;document-annotation;pdf-annotation;comments;review</PackageTags>
+    <PackageIcon>images\icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IsPackable>true</IsPackable>
+    <!-- Package as a .NET tool so the nupkg gets the required tools/ layout
+         for `dnx` / `dotnet tool install` invocation. -->
+    <PackAsTool>true</PackAsTool>
+    <!-- Mark as MCP server for NuGet.org discovery (packagetype=McpServer filter).
+         NOTE: correct MSBuild property is singular <PackageType>; the plural form is ignored. -->
+    <PackageType>McpServer</PackageType>
+    <!-- CLI tool name for dnx / dotnet tool install invocation -->
+    <ToolCommandName>groupdocs-annotation-mcp</ToolCommandName>
+  </PropertyGroup>
+
+  <!-- Strip native debug symbols from the published tools/ output BEFORE pack
+       collects it. Keeps the nupkg under NuGet.org's 250 MB hard limit (HTTP 413
+       on push otherwise). Managed-code PDBs are preserved; only
+       runtimes/<rid>/native/*.pdb is removed. <CopyDebugSymbolFilesFromPackages>
+       false</...> does NOT cover this — runtime-asset PDBs travel via a separate
+       publish path that property doesn't intercept. Defense in depth, no-op when
+       no native PDBs are present. -->
+  <Target Name="StripNativeRuntimePdbs" AfterTargets="Publish">
+    <ItemGroup>
+      <_NativeRuntimePdbs Include="$(PublishDir)runtimes/**/*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(_NativeRuntimePdbs)" />
+    <Message
+      Text="StripNativeRuntimePdbs: removed @(_NativeRuntimePdbs->Count()) native PDB file(s) from publish output to keep the nupkg under NuGet.org's 250 MB limit."
+      Importance="high"
+      Condition="@(_NativeRuntimePdbs->Count()) > 0" />
+  </Target>
+
+  <ItemGroup>
+    <None Include="..\..\assets\icon.png" Pack="true" Visible="false" PackagePath="images\icon.png" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="/" />
+    <!-- server.json — read by NuGet.org to generate mcp.json snippets on the package page -->
+    <None Include=".mcp\server.json" Pack="true" PackagePath=".mcp/server.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Core infrastructure — NuGet packages from groupdocs-mcp-core -->
+    <PackageReference Include="GroupDocs.Mcp.Core" Version="$(GroupDocsMcpCore)" />
+    <PackageReference Include="GroupDocs.Mcp.Local.Storage" Version="$(GroupDocsMcpCore)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GroupDocs.Annotation" Version="$(GroupDocsAnnotation)" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsHosting)" />
+    <PackageReference Include="ModelContextProtocol" Version="$(ModelContextProtocol)" />
+    <!-- SkiaSharp: GroupDocs.Annotation 25.11.0 pins managed SkiaSharp 3.119.0 but
+         transitively pulls the old 2.80.1 NativeAssets.Linux.NoDependencies, which
+         is ABI-incompatible with managed 3.x. Pin BOTH packages to matching 3.119.4
+         so the Linux runtime resolves libSkiaSharp.so from the 3.x native asset.
+         Re-evaluate when the engine bumps its transitive. -->
+    <PackageReference Include="SkiaSharp" Version="$(SkiaSharp)" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="$(SkiaSharpNativeAssetsLinux)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- GroupDocs.Annotation processes images, Office documents, and PDFs via
+         System.Drawing.Common; GeneratePagesPreview rasterises pages onto PNGs.
+         On non-Windows that throws PlatformNotSupportedException unless this flag
+         is set. Pair with libgdiplus + libfontconfig1 + ttf-mscorefonts-installer
+         in docker/Dockerfile so glyph rendering succeeds on Linux. -->
+    <RuntimeHostConfigurationOption Include="System.Drawing.EnableUnixSupport" Value="true" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,49 @@
+# GroupDocs.Annotation MCP Server
+
+MCP server for GroupDocs.Annotation — add, list, update, remove document annotations via AI agents.
+
+## Install
+
+- With dnx (.NET 10 SDK, no install step): `dnx GroupDocs.Annotation.Mcp@26.5.0 --yes`
+- As a global dotnet tool: `dotnet tool install -g GroupDocs.Annotation.Mcp` then run `groupdocs-annotation-mcp`
+- As a Docker container: `docker run --rm -i -v $(pwd)/documents:/data ghcr.io/groupdocs-annotation/annotation-net-mcp:latest`
+- Native prerequisite for native (dnx / global tool) runs on Linux and macOS: install libgdiplus and MS core fonts — `sudo apt-get install -y libgdiplus libfontconfig1 ttf-mscorefonts-installer` on Linux, `brew install mono-libgdiplus` on macOS. Not needed on Windows (GDI+ built in) or in Docker (bundled in the image).
+
+## MCP tools
+
+- AddAnnotation — add a textfield / area / point / arrow / highlight / underline / strikeout annotation; saves as `<name>_annotated.<ext>`
+- GetAnnotations — list all annotations as JSON (id, type, message, page, box, user, replies)
+- UpdateAnnotation — modify an existing annotation's message and/or bounding box by id
+- RemoveAnnotations — remove annotations by id list, or all if none specified
+- AddReply — add a reply to an existing annotation
+- RemoveReplies — remove replies by reply-id list, by user name, or all
+- ImportAnnotations — import annotations from an XML file or another annotated document
+- ExportAnnotations — extract annotations to XML (re-importable via ImportAnnotations)
+- GetDocumentInfo — return file type, page count, size, and per-page dimensions as JSON (read-only)
+- GeneratePagesPreview — render up to 5 pages as inline PNG image content blocks (annotations baked in)
+
+## Supported formats
+
+PDF, DOCX, XLSX, PPTX, JPEG, PNG, TIFF, and 50+ other document and image formats supported by GroupDocs.Annotation.
+
+## Environment variables
+
+- GROUPDOCS_MCP_STORAGE_PATH — base folder for input + output (defaults to current working directory)
+- GROUPDOCS_MCP_OUTPUT_PATH — optional, routes output files to a separate folder
+- GROUPDOCS_LICENSE_PATH — path to GroupDocs.Total.lic, omit for evaluation mode
+
+## Key links
+
+- NuGet: https://www.nuget.org/packages/GroupDocs.Annotation.Mcp
+- Repository: https://github.com/groupdocs-annotation/GroupDocs.Annotation.Mcp
+- Docker: ghcr.io/groupdocs-annotation/annotation-net-mcp and docker.io/groupdocs/annotation-net-mcp
+- MCP Registry: io.github.groupdocs-annotation/groupdocs-annotation-mcp
+- License: MIT
+
+## Example prompts for AI agents
+
+- "Annotate contract.pdf — add a highlight on page 2 around the indemnity clause and an arrow with the comment 'Needs legal review'"
+- "List every annotation in design-review.docx and group them by author"
+- "Reply to annotation 7 in spec.pdf with 'Implemented in PR #42' under the user 'alice'"
+- "Export the annotations from old.pdf to XML, then re-import them into new.pdf"
+- "Preview page 1 and page 5 of report.pdf with annotations baked in"
